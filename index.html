@@ -36,6 +36,14 @@
     .green{background:#def3e5;color:#145d30;border-left:7px solid #2da85c}
     .yellow{background:#fff0bf;color:#745005;border-left:7px solid #e6b42b}
     .red{background:#ffe0e0;color:#97252b;border-left:7px solid #e34b52}
+    .measure{margin-top:26px;padding:20px 16px;border:2px solid #d5e0ee;border-radius:14px;background:#fff}
+    .measure .label{margin-bottom:12px}
+    .indicator{margin-top:15px;padding:18px 12px;border-radius:12px;text-align:center;background:#edf1f6;color:#38465a}
+    .indicator .status{font-size:clamp(30px,8vw,42px);font-weight:900;line-height:1.3}
+    .indicator .ratio{font-size:clamp(23px,5.8vw,30px);font-weight:800;margin-top:4px}
+    .indicator.green{background:#def3e5;color:#145d30;border:3px solid #2da85c}
+    .indicator.yellow{background:#fff0bf;color:#745005;border:3px solid #e6b42b}
+    .indicator.red{background:#ffe0e0;color:#97252b;border:3px solid #e34b52}
     .error{color:#b42318;font-size:19px;font-weight:700;margin:10px 0 0;min-height:20px}
     .btn{display:block;width:100%;margin-top:22px;padding:16px;background:#fff;border:2px solid #c5d2e1;border-radius:12px;cursor:pointer;font:inherit;font-size:21px;font-weight:800;color:#354c66;min-height:60px}
     @media(max-width:480px){
@@ -69,6 +77,14 @@
     </div>
     <div class="result" aria-live="polite"><div class="caption">PEFR 預測值</div><div class="number" id="predicted">417.58</div><div class="unit">L/min（公升／分鐘）</div></div>
     <p id="error" class="error" role="status"></p>
+    <div class="measure">
+      <label class="label" for="actual">實際測量 PEFR（L/min）</label>
+      <input id="actual" type="number" inputmode="decimal" min="0" step="any" placeholder="請輸入測量數值">
+      <div class="indicator" id="indicator" role="status" aria-live="polite">
+        <div class="status" id="status">等待輸入測量值</div>
+        <div class="ratio" id="ratio"></div>
+      </div>
+    </div>
     <h2>燈區數值範圍</h2>
     <div class="zone green"><div><span class="name">🟢 綠燈區（≥ 80%）</span></div><div class="range" id="green">≥ 335 L/min</div></div>
     <div class="zone yellow"><div><span class="name">🟡 黃燈區（60%～80%）</span></div><div class="range" id="yellow">251–334 L/min</div></div>
@@ -80,22 +96,40 @@
   'use strict';
   const ageEl=document.getElementById('age'),heightEl=document.getElementById('height');
   const predictedEl=document.getElementById('predicted'),err=document.getElementById('error');
+  const actualEl=document.getElementById('actual'), indicator=document.getElementById('indicator');
+  const statusEl=document.getElementById('status'), ratioEl=document.getElementById('ratio');
+  function showIndicator(kind, title, ratio=''){
+    indicator.className='indicator'+(kind?' '+kind:'');
+    statusEl.textContent=title;
+    ratioEl.textContent=ratio;
+  }
   const out={green:document.getElementById('green'),yellow:document.getElementById('yellow'),red:document.getElementById('red')};
   function calculate(){
     const age=Number(ageEl.value),height=Number(heightEl.value);
     const sex=document.querySelector('input[name="sex"]:checked').value;
     const valid=ageEl.value!==''&&heightEl.value!==''&&Number.isFinite(age)&&Number.isFinite(height)&&Number.isInteger(age)&&age>=1&&age<=120&&height>=50&&height<=250;
     const p=sex==='female'?4.1028*height-1.6111*age-173.5476:3.8856*height-2.9508*age+43.5846;
-    if(!valid||p<=0){predictedEl.textContent='—';Object.values(out).forEach(x=>x.textContent='—');err.textContent=!valid?'請輸入有效的年齡（1–120 歲）與身高（50–250 cm）。':'此組資料計算的預測值不合理，請檢查輸入。';return;}
+    if(!valid||p<=0){predictedEl.textContent='—';Object.values(out).forEach(x=>x.textContent='—');err.textContent=!valid?'請輸入有效的年齡（1–120 歲）與身高（50–250 cm）。':'此組資料計算的預測值不合理，請檢查輸入。';showIndicator('', '請先輸入有效的年齡與身高');return;}
     err.textContent='';predictedEl.textContent=p.toFixed(2);
     // 整數讀值：ceil 使所有區間完整覆蓋、不重疊。
     const g=Math.ceil(p*.8),y=Math.ceil(p*.6);
     out.green.textContent=`≥ ${g} L/min`;
     out.yellow.textContent=`${y}–${g-1} L/min`;
     out.red.textContent=`< ${y} L/min`;
+    if(actualEl.value.trim()===''){
+      showIndicator('', '等待輸入測量值');
+    }else{
+      const actual=Number(actualEl.value);
+      if(!Number.isFinite(actual)||actual<0){showIndicator('', '請輸入有效測量值');return;}
+      const pct=actual/p*100;
+      // 燈號以未四捨五入的預測值比例判定，避免臨界值誤判。
+      const zone=pct>=80?'green':pct>=60?'yellow':'red';
+      const names={green:'🟢 綠燈區',yellow:'🟡 黃燈區',red:'🔴 紅燈區'};
+      showIndicator(zone,names[zone],`預測值百分比：${pct.toFixed(1)}%`);
+    }
   }
-  [ageEl,heightEl,...document.querySelectorAll('input[name="sex"]')].forEach(el=>el.addEventListener('input',calculate));
-  document.getElementById('reset').addEventListener('click',()=>{ageEl.value='';heightEl.value='';document.getElementById('female').checked=true;calculate();ageEl.focus();});
+  [ageEl,heightEl,actualEl,...document.querySelectorAll('input[name="sex"]')].forEach(el=>el.addEventListener('input',calculate));
+  document.getElementById('reset').addEventListener('click',()=>{ageEl.value='';heightEl.value='';actualEl.value='';document.getElementById('female').checked=true;calculate();ageEl.focus();});
   calculate();
 </script>
 </body>
