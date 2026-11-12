@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f9fc">
+  <title>PEFR 尖峰呼氣流速預測計算器</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:#1c2936;background:#f7f9fc;font-synthesis:none}
+    *{box-sizing:border-box}
+    body{margin:0;padding:22px 12px;font-size:20px;line-height:1.5}
+    main{max-width:600px;margin:auto}
+    h1{font-size:clamp(27px,6.4vw,36px);line-height:1.3;margin:0 0 9px;letter-spacing:.01em;font-weight:800}
+    .subtitle{color:#526378;font-size:clamp(18px,4.5vw,22px);margin:0 0 22px;line-height:1.5}
+    .panel{background:white;border:1px solid #e4e9ef;border-radius:18px;padding:24px;box-shadow:0 7px 24px #152b4510}
+    .label{display:block;font-size:23px;font-weight:800;margin:0 0 10px}
+    .field{margin-bottom:22px}
+    .seg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .seg input{position:absolute;opacity:0;width:1px;height:1px}
+    .seg label{display:block;border:2px solid #d6dde7;border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;font-weight:800;font-size:24px;min-height:62px}
+    .seg input:checked+label{border-color:#2563eb;background:#ebf2ff;color:#1754c5}
+    .seg input:focus-visible+label{outline:3px solid #93c5fd}
+    input[type=number]{width:100%;font:inherit;font-size:28px;font-weight:700;min-height:65px;border-radius:12px;border:2px solid #bac9d9;padding:12px;background:white;color:#172b4d}
+    input[type=number]:focus{outline:3px solid #93baff;border-color:#3679ed}
+    input::placeholder{font-size:18px;font-weight:400}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .result{text-align:center;background:#eff5ff;padding:24px 10px;border-radius:14px;margin-top:4px}
+    .result .caption{font-size:23px;font-weight:800;color:#344e71}
+    .result .number{font-size:clamp(56px,13vw,76px);font-weight:900;color:#195ac4;line-height:1.25;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+    .unit{font-size:20px;color:#445b78}
+    h2{font-size:27px;margin:28px 0 16px;font-weight:800}
+    .zone{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-radius:13px;padding:20px 16px;margin:12px 0;font-weight:800}
+    .zone .name{font-size:25px}
+    .zone .range{text-align:right;font-size:clamp(22px,5.4vw,30px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1.3}
+    .zone .percent{display:block;font-weight:900;font-size:clamp(22px,5vw,27px);margin-top:5px;line-height:1.35}
+    .green{background:#def3e5;color:#145d30;border-left:7px solid #2da85c}
+    .yellow{background:#fff0bf;color:#745005;border-left:7px solid #e6b42b}
+    .red{background:#ffe0e0;color:#97252b;border-left:7px solid #e34b52}
+    .error{color:#b42318;font-size:19px;font-weight:700;margin:10px 0 0;min-height:20px}
+    .btn{display:block;width:100%;margin-top:22px;padding:16px;background:#fff;border:2px solid #c5d2e1;border-radius:12px;cursor:pointer;font:inherit;font-size:21px;font-weight:800;color:#354c66;min-height:60px}
+    @media(max-width:480px){
+      body{padding:15px 10px}
+      .panel{padding:18px 14px}
+      .two{gap:10px}
+      .two .label{font-size:21px}
+      input[type=number]{font-size:27px;padding:10px}
+      .zone{display:block}
+      .zone .range{margin-top:9px;text-align:left;font-size:clamp(24px,6vw,30px)}
+      .zone .percent{font-size:23px}
+    }
+    @media(max-width:340px){.two{grid-template-columns:1fr}.result .number{font-size:52px}}
+  </style>
+</head>
+<body>
+<main>
+  <h1>尖峰呼氣流速 PEFR</h1>
+  <p class="subtitle">正常預測值與綠・黃・紅燈範圍計算</p>
+  <section class="panel" aria-label="PEFR 計算器">
+    <div class="field">
+      <span class="label">性別</span>
+      <div class="seg">
+        <div><input id="female" type="radio" name="sex" value="female" checked><label for="female">女性</label></div>
+        <div><input id="male" type="radio" name="sex" value="male"><label for="male">男性</label></div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="field"><label class="label" for="age">年齡（歲）</label><input id="age" type="number" inputmode="numeric" min="1" max="120" step="1" placeholder="例如 38" value="38"></div>
+      <div class="field"><label class="label" for="height">身高（cm）</label><input id="height" type="number" inputmode="decimal" min="50" max="250" step="0.1" placeholder="例如 159" value="159"></div>
+    </div>
+    <div class="result" aria-live="polite"><div class="caption">PEFR 預測值</div><div class="number" id="predicted">417.58</div><div class="unit">L/min（公升／分鐘）</div></div>
+    <p id="error" class="error" role="status"></p>
+    <h2>燈區數值範圍</h2>
+    <div class="zone green"><div><span class="name">🟢 綠燈區（≥ 80%）</span></div><div class="range" id="green">≥ 335 L/min</div></div>
+    <div class="zone yellow"><div><span class="name">🟡 黃燈區（60%～80%）</span></div><div class="range" id="yellow">251–334 L/min</div></div>
+    <div class="zone red"><div><span class="name">🔴 紅燈區（&lt; 60%）</span></div><div class="range" id="red">&lt; 251 L/min</div></div>
+    <button type="button" id="reset" class="btn">清除並重新輸入</button>
+  </section>
+</main>
+<script>
+  'use strict';
+  const ageEl=document.getElementById('age'),heightEl=document.getElementById('height');
+  const predictedEl=document.getElementById('predicted'),err=document.getElementById('error');
+  const out={green:document.getElementById('green'),yellow:document.getElementById('yellow'),red:document.getElementById('red')};
+  function calculate(){
+    const age=Number(ageEl.value),height=Number(heightEl.value);
+    const sex=document.querySelector('input[name="sex"]:checked').value;
+    const valid=ageEl.value!==''&&heightEl.value!==''&&Number.isFinite(age)&&Number.isFinite(height)&&Number.isInteger(age)&&age>=1&&age<=120&&height>=50&&height<=250;
+    const p=sex==='female'?4.1028*height-1.6111*age-173.5476:3.8856*height-2.9508*age+43.5846;
+    if(!valid||p<=0){predictedEl.textContent='—';Object.values(out).forEach(x=>x.textContent='—');err.textContent=!valid?'請輸入有效的年齡（1–120 歲）與身高（50–250 cm）。':'此組資料計算的預測值不合理，請檢查輸入。';return;}
+    err.textContent='';predictedEl.textContent=p.toFixed(2);
+    // 整數讀值：ceil 使所有區間完整覆蓋、不重疊。
+    const g=Math.ceil(p*.8),y=Math.ceil(p*.6);
+    out.green.textContent=`≥ ${g} L/min`;
+    out.yellow.textContent=`${y}–${g-1} L/min`;
+    out.red.textContent=`< ${y} L/min`;
+  }
+  [ageEl,heightEl,...document.querySelectorAll('input[name="sex"]')].forEach(el=>el.addEventListener('input',calculate));
+  document.getElementById('reset').addEventListener('click',()=>{ageEl.value='';heightEl.value='';document.getElementById('female').checked=true;calculate();ageEl.focus();});
+  calculate();
+</script>
+</body>
+</html>
