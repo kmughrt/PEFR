@@ -72,10 +72,10 @@
       </div>
     </div>
     <div class="two">
-      <div class="field"><label class="label" for="age">年齡（歲）</label><input id="age" type="number" inputmode="numeric" min="1" max="120" step="1" placeholder="例如 38" value="38"></div>
-      <div class="field"><label class="label" for="height">身高（cm）</label><input id="height" type="number" inputmode="decimal" min="50" max="250" step="0.1" placeholder="例如 159" value="159"></div>
+      <div class="field"><label class="label" for="age">年齡（歲）</label><input id="age" type="number" inputmode="numeric" min="1" max="120" step="1" placeholder="請輸入年齡"></div>
+      <div class="field"><label class="label" for="height">身高（cm）</label><input id="height" type="number" inputmode="decimal" min="50" max="250" step="0.1" placeholder="請輸入身高"></div>
     </div>
-    <div class="result" aria-live="polite"><div class="caption">PEFR 預測值</div><div class="number" id="predicted">417.58</div><div class="unit">L/min（公升／分鐘）</div></div>
+    <div class="result" aria-live="polite"><div class="caption">PEFR 預測值</div><div class="number" id="predicted">—</div><div class="unit">L/min（公升／分鐘）</div></div>
     <p id="error" class="error" role="status"></p>
     <div class="measure">
       <label class="label" for="actual">實際測量 PEFR（L/min）</label>
@@ -86,9 +86,9 @@
       </div>
     </div>
     <h2>燈區數值範圍</h2>
-    <div class="zone green"><div><span class="name">🟢 綠燈區（≥ 80%）</span></div><div class="range" id="green">≥ 335 L/min</div></div>
-    <div class="zone yellow"><div><span class="name">🟡 黃燈區（60%～80%）</span></div><div class="range" id="yellow">251–334 L/min</div></div>
-    <div class="zone red"><div><span class="name">🔴 紅燈區（&lt; 60%）</span></div><div class="range" id="red">&lt; 251 L/min</div></div>
+    <div class="zone green"><div><span class="name">🟢 綠燈區（≥ 80%）</span></div><div class="range" id="green">—</div></div>
+    <div class="zone yellow"><div><span class="name">🟡 黃燈區（60%～80%）</span></div><div class="range" id="yellow">—</div></div>
+    <div class="zone red"><div><span class="name">🔴 紅燈區（&lt; 60%）</span></div><div class="range" id="red">—</div></div>
     <button type="button" id="reset" class="btn">清除並重新輸入</button>
   </section>
 </main>
